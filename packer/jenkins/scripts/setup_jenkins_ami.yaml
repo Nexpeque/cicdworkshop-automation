@@ -1,0 +1,76 @@
+---
+- name: Prepare instance for Jenkins
+  hosts: all
+  become: true
+
+  tasks:
+  - name: Update all packages
+    yum:
+      name: '*'
+      state: latest
+
+  - name: Install Wget
+    yum:
+      name: wget
+      state: latest
+
+  - name: Install Java 8
+    yum:
+      name: java-1.8.0
+      state: latest
+
+  - name: Remove Java 7
+    yum:
+      name: java-1.7.0
+      state: removed
+
+  - name: Install git
+    yum:
+      name: git
+      state: latest
+
+  - name: Wget Jenkins repo
+    command:  wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins.io/redhat/jenkins.repo
+
+  - name: Add Jenkins rpm repo
+    command:  rpm --import https://pkg.jenkins.io/redhat/jenkins.io.key
+
+  - name: Install Jenkins
+    yum:
+      name: jenkins
+      state: latest
+
+  - name: Restart JENKINS service
+    service:
+      name: jenkins
+      state: started
+
+  - name: Create new user
+    user:
+        name: jenkins
+
+  - name: Ansible permissions
+    lineinfile:
+      path: /etc/sudoers
+      insertafter: EOF
+      line: 'jenkins ALL=(ALL) NOPASSWD:ALL'
+
+  - name: Create /opt/hashicorp folder
+    file:
+      path: /opt/hashicorp
+      state: directory
+
+  - name: Wget Terraform
+    command: wget https://releases.hashicorp.com/terraform/0.11.8/terraform_0.11.8_linux_386.zip
+
+  - name: Unzip Terraform
+    command: unzip -d /opt/hashicorp/ terraform_0.11.8_linux_386.zip
+
+  - name: Wget Packer
+    command: wget https://releases.hashicorp.com/packer/1.3.1/packer_1.3.1_linux_amd64.zip
+
+  - name: Unzip Packer
+    command: unzip -d /opt/hashicorp/ packer_1.3.1_linux_amd64.zip
+
+  - name: Configure terraform ans packer binaries for all users
+    command: echo "export PATH=$PATH:/opt/hashicorp" >> ~/.bashrc
