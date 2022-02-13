@@ -10,7 +10,7 @@ variable "image_url" {
 
 variable "image_version" {
   type    = string
-  default = "18_220211"
+  default = "latest"
 }
 
 variable "family" {
